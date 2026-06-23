@@ -1,0 +1,8 @@
+{
+  "name": "Acceptance Report Dashboard",
+  "description": "Dashboard for analyzing Excel acceptance reports with data filtering, charts, and export options.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
