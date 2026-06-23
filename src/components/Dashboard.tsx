@@ -42,7 +42,7 @@ const MultiSelect = ({ label, options, selected, onChange }: { label: string, op
   }, [options, searchQuery]);
 
   return (
-    <div className="space-y-1.5 relative w-full lg:w-1/4" ref={containerRef}>
+    <div className="space-y-1.5 relative w-full lg:flex-1" ref={containerRef}>
       <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
       <div 
         className="relative cursor-pointer group"
@@ -102,6 +102,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   
   const [filters, setFilters] = useState<FilterState>({
+    region: [],
     province: [],
     scenario: [],
     technician: [],
@@ -125,32 +126,42 @@ export const Dashboard: React.FC = () => {
   };
 
   const resetFilters = () => {
-    setFilters({ province: [], scenario: [], technician: [], status: [], searchQuery: '' });
+    setFilters({ region: [], province: [], scenario: [], technician: [], status: [], searchQuery: '' });
   };
 
   const availableOptions = useMemo(() => {
-    if (!data) return { provinces: [], scenarios: [], technicians: [], statuses: [] };
+    if (!data) return { regions: [], provinces: [], scenarios: [], technicians: [], statuses: [] };
     
     // Always available options based on full dataset
-    const provs = Array.from(new Set(data.map(d => d.province))).sort();
+    const regions = Array.from(new Set(data.map(d => d.region))).sort();
     const scens = Array.from(new Set(data.map(d => d.scenario))).sort();
     const stats = Array.from(new Set(data.map(d => d.status))).sort();
 
-    // Dynamically filter technicians based on selected province
-    let validTechs = new Set<string>();
-    if (filters.province.length > 0) {
-      data.filter(d => filters.province.includes(d.province)).forEach(d => validTechs.add(d.technician));
+    // Dynamically filter provinces based on selected region
+    let validProvs = new Set<string>();
+    if (filters.region.length > 0) {
+      data.filter(d => filters.region.includes(d.region)).forEach(d => validProvs.add(d.province));
     } else {
-      data.forEach(d => validTechs.add(d.technician));
+      data.forEach(d => validProvs.add(d.province));
     }
+    const provs = Array.from(validProvs).sort();
+
+    // Dynamically filter technicians based on selected province & region
+    let validTechs = new Set<string>();
+    data.filter(d => {
+      const matchRegion = filters.region.length === 0 || filters.region.includes(d.region);
+      const matchProv = filters.province.length === 0 || filters.province.includes(d.province);
+      return matchRegion && matchProv;
+    }).forEach(d => validTechs.add(d.technician));
     const techs = Array.from(validTechs).sort();
 
-    return { provinces: provs, scenarios: scens, technicians: techs, statuses: stats };
-  }, [data, filters.province]);
+    return { regions, provinces: provs, scenarios: scens, technicians: techs, statuses: stats };
+  }, [data, filters.region, filters.province]);
 
   const filteredData = useMemo(() => {
     if (!data) return [];
     return data.filter(item => {
+      const matchRegion = filters.region.length === 0 || filters.region.includes(item.region);
       const matchProv = filters.province.length === 0 || filters.province.includes(item.province);
       const matchScen = filters.scenario.length === 0 || filters.scenario.includes(item.scenario);
       const matchTech = filters.technician.length === 0 || filters.technician.includes(item.technician);
@@ -161,9 +172,10 @@ export const Dashboard: React.FC = () => {
         const q = filters.searchQuery.toLowerCase();
         matchSearch = item.contract.toLowerCase().includes(q) || 
                       item.technician.toLowerCase().includes(q) || 
-                      item.province.toLowerCase().includes(q);
+                      item.province.toLowerCase().includes(q) ||
+                      item.region.toLowerCase().includes(q);
       }
-      return matchProv && matchScen && matchTech && matchStat && matchSearch;
+      return matchRegion && matchProv && matchScen && matchTech && matchStat && matchSearch;
     });
   }, [data, filters]);
 
@@ -289,12 +301,27 @@ export const Dashboard: React.FC = () => {
                   </button>
                </div>
 
-               <div className="flex flex-col lg:flex-row gap-4">
+               <div className="flex flex-col lg:flex-row gap-4 mb-4">
+                  <MultiSelect 
+                    label="Vùng / Miền" 
+                    options={availableOptions.regions} 
+                    selected={filters.region} 
+                    onChange={v => setFilters(prev => ({
+                      ...prev, 
+                      region: v, 
+                      province: prev.province.filter(p => !v.length || availableOptions.provinces.includes(p)),
+                      technician: prev.technician.filter(t => !v.length || availableOptions.technicians.includes(t))
+                    }))} 
+                  />
                   <MultiSelect 
                     label="Tỉnh / Thành phố" 
                     options={availableOptions.provinces} 
                     selected={filters.province} 
-                    onChange={v => setFilters(prev => ({...prev, province: v, technician: prev.technician.filter(t => availableOptions.technicians.includes(t))}))} 
+                    onChange={v => setFilters(prev => ({
+                      ...prev, 
+                      province: v, 
+                      technician: prev.technician.filter(t => !v.length || availableOptions.technicians.includes(t))
+                    }))} 
                   />
                   <MultiSelect 
                     label="Kịch bản nghiệp vụ" 
@@ -302,6 +329,9 @@ export const Dashboard: React.FC = () => {
                     selected={filters.scenario} 
                     onChange={v => setFilters(prev => ({...prev, scenario: v}))} 
                   />
+               </div>
+               
+               <div className="flex flex-col lg:flex-row gap-4 flex-wrap">
                   <MultiSelect 
                     label="Kỹ thuật viên" 
                     options={availableOptions.technicians} 

@@ -106,6 +106,24 @@ export const parseExcelFile = async (file: File): Promise<ReportData[]> => {
           else if (lowerScen.includes("2.4ghz") || lowerScen.includes("2.4g")) band = "Băng tần 2.4GHz";
           else if (lowerScen.includes("kép") || lowerScen.includes("kep")) band = "Băng tần kép";
 
+          let region = "Khác";
+          const lowerProv = province.toLowerCase();
+          const regions: Record<string, string[]> = {
+            "Tây Nguyên - Miền Trung": ["quảng nam", "đắk lắk", "phú yên", "gia lai", "bình định", "đắk nông", "quảng ngãi", "kon tum", "quảng trị", "quảng bình", "thừa thiên huế"],
+            "Đông Nam Bộ": ["ninh thuận", "lâm đồng", "bình thuận", "tây ninh", "long an", "tây ninh - long an", "bình phước"],
+            "Tây Nam Bộ": ["an giang", "kiên giang", "cà mau", "bạc liêu", "cần thơ", "hậu giang", "sóc trăng", "đồng tháp", "tiền giang", "vĩnh long", "bến tre", "trà vinh"],
+            "Đông Bắc Bộ": ["điện biên", "hà tĩnh", "hưng yên", "thái bình", "lai châu", "nghệ an", "ninh bình", "hà nam", "nam định", "sơn la", "thanh hóa"],
+            "Tây Bắc Bộ": ["bắc ninh", "bắc giang", "cao bằng", "lạng sơn", "lào cai", "yên bái", "phú thọ", "hòa bình", "vĩnh phúc", "thái nguyên", "bắc cạn", "bắc kạn", "tuyên quang", "hà giang"],
+            "Đô thị lớn": ["hà nội", "quảng ninh", "hải dương", "hải phòng", "đà nẵng", "khánh hòa", "hồ chí minh", "hcm", "đồng nai", "bình dương", "vũng tàu", "bà rịa", "br - vt", "br-vt"]
+          };
+          
+          for (const [r, list] of Object.entries(regions)) {
+            if (list.some(p => lowerProv.includes(p))) {
+              region = r;
+              break;
+            }
+          }
+
           return {
             id: `row-${index}`,
             contract: contract === "" ? "N/A" : contract,
@@ -113,6 +131,7 @@ export const parseExcelFile = async (file: File): Promise<ReportData[]> => {
             band,
             technician,
             province,
+            region,
             status,
             duration,
             dateCreated,

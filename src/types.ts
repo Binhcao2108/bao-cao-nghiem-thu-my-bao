@@ -5,6 +5,7 @@ export interface ReportData {
   band: string;
   technician: string;
   province: string;
+  region: string;
   status: string;
   duration: string;
   dateCreated: string;
@@ -12,6 +13,7 @@ export interface ReportData {
 }
 
 export interface FilterState {
+  region: string[];
   province: string[];
   scenario: string[];
   technician: string[];

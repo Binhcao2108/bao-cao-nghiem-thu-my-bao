@@ -32,6 +32,25 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
     })).filter(d => d.value > 0);
   }, [data]);
 
+  const regionData = useMemo(() => {
+    const regCounts: Record<string, {success: number, error: number, total: number}> = {};
+    data.forEach(d => {
+      // fallback if region is not present directly
+      const r = d.region || 'Khác';
+      if (!regCounts[r]) regCounts[r] = { success: 0, error: 0, total: 0 };
+      regCounts[r].total += 1;
+      if (d.status === 'Thành công') regCounts[r].success += 1;
+      if (d.status === 'Lỗi') regCounts[r].error += 1;
+    });
+
+    return Object.keys(regCounts).map(r => ({
+      name: r,
+      'Thành công': regCounts[r].success,
+      'Lỗi': regCounts[r].error,
+      total: regCounts[r].total
+    })).sort((a, b) => b.total - a.total);
+  }, [data]);
+
   const provinceData = useMemo(() => {
     const provCounts: Record<string, {success: number, error: number, total: number}> = {};
     data.forEach(d => {
@@ -137,6 +156,30 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
               </ResponsiveContainer>
             ) : <div className="w-full h-full flex items-center justify-center text-slate-400 text-[13px] font-medium">Không có dữ liệu</div>}
           </div>
+        </div>
+      </div>
+
+      {/* Region Row: Region bar chart */}
+      <div className="border border-slate-100 rounded-xl p-4 bg-slate-50/50 flex flex-col mt-6">
+        <span className="text-[12px] font-bold text-slate-600 mb-4 text-center">Thống kê theo Vùng / Miền</span>
+        <div className="w-full h-[300px] relative">
+          {regionData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={regionData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} barSize={32}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dy={5} />
+                <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} dx={-5} />
+                <RechartsTooltip contentStyle={customTooltip} cursor={{ fill: '#f1f5f9' }} />
+                <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: '#64748b', paddingTop: '5px' }} iconType="circle" />
+                <Bar dataKey="Thành công" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]}>
+                  <LabelList dataKey="Thành công" position="center" fill="#fff" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                </Bar>
+                <Bar dataKey="Lỗi" stackId="a" fill="#f43f5e" radius={[4, 4, 0, 0]}>
+                  <LabelList dataKey="Lỗi" position="top" fill="#f43f5e" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : <div className="w-full h-full flex items-center justify-center text-slate-400 text-[13px] font-medium">Không có dữ liệu</div>}
         </div>
       </div>
 
