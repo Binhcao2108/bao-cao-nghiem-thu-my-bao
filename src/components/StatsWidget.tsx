@@ -9,7 +9,7 @@ export const StatsWidget: React.FC<StatsWidgetProps> = ({ data }) => {
   const total = data.length;
   const success = data.filter(d => d.status === 'Thành công').length;
   const error = data.filter(d => d.status === 'Lỗi').length;
-  const inProgress = data.filter(d => d.status === 'Đang trong ca').length;
+  const inProgress = data.filter(d => d.status === 'Chưa hoàn thành').length;
   const naContracts = data.filter(d => d.contract === 'N/A').length;
 
   const successPct = total > 0 ? ((success / total) * 100).toFixed(1) : '0.0';
@@ -56,7 +56,7 @@ export const StatsWidget: React.FC<StatsWidgetProps> = ({ data }) => {
       
       <div className="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-slate-200 p-4 flex flex-col justify-between">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Đang trong ca</span>
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Chưa hoàn thành</span>
           <div className="w-7 h-7 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center text-xs">⌛</div>
         </div>
         <div>

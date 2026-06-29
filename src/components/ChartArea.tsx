@@ -10,12 +10,12 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
   const statusData = useMemo(() => {
     const success = data.filter(d => d.status === 'Thành công').length;
     const error = data.filter(d => d.status === 'Lỗi').length;
-    const inProgress = data.filter(d => d.status === 'Đang trong ca').length;
+    const inProgress = data.filter(d => d.status === 'Chưa hoàn thành').length;
     
     return [
       { name: 'Thành công', value: success, color: '#10b981' }, 
       { name: 'Lỗi', value: error, color: '#f43f5e' },    
-      { name: 'Đang xử lý', value: inProgress, color: '#f59e0b' }        
+      { name: 'Chưa hoàn thành', value: inProgress, color: '#f59e0b' }        
     ].filter(d => d.value > 0);
   }, [data]);
 
@@ -33,37 +33,41 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
   }, [data]);
 
   const regionData = useMemo(() => {
-    const regCounts: Record<string, {success: number, error: number, total: number}> = {};
+    const regCounts: Record<string, {success: number, error: number, other: number, total: number}> = {};
     data.forEach(d => {
       // fallback if region is not present directly
       const r = d.region || 'Khác';
-      if (!regCounts[r]) regCounts[r] = { success: 0, error: 0, total: 0 };
+      if (!regCounts[r]) regCounts[r] = { success: 0, error: 0, other: 0, total: 0 };
       regCounts[r].total += 1;
       if (d.status === 'Thành công') regCounts[r].success += 1;
-      if (d.status === 'Lỗi') regCounts[r].error += 1;
+      else if (d.status === 'Lỗi') regCounts[r].error += 1;
+      else regCounts[r].other += 1;
     });
 
     return Object.keys(regCounts).map(r => ({
       name: r,
       'Thành công': regCounts[r].success,
       'Lỗi': regCounts[r].error,
+      'Chưa hoàn thành': regCounts[r].other,
       total: regCounts[r].total
     })).sort((a, b) => b.total - a.total);
   }, [data]);
 
   const provinceData = useMemo(() => {
-    const provCounts: Record<string, {success: number, error: number, total: number}> = {};
+    const provCounts: Record<string, {success: number, error: number, other: number, total: number}> = {};
     data.forEach(d => {
-      if (!provCounts[d.province]) provCounts[d.province] = { success: 0, error: 0, total: 0 };
+      if (!provCounts[d.province]) provCounts[d.province] = { success: 0, error: 0, other: 0, total: 0 };
       provCounts[d.province].total += 1;
       if (d.status === 'Thành công') provCounts[d.province].success += 1;
-      if (d.status === 'Lỗi') provCounts[d.province].error += 1;
+      else if (d.status === 'Lỗi') provCounts[d.province].error += 1;
+      else provCounts[d.province].other += 1;
     });
 
     return Object.keys(provCounts).map(p => ({
       name: p.length > 12 ? p.substring(0, 10) + '...' : p,
       'Thành công': provCounts[p].success,
       'Lỗi': provCounts[p].error,
+      'Chưa hoàn thành': provCounts[p].other,
       total: provCounts[p].total
     })).sort((a, b) => b.total - a.total).slice(0, 15);
   }, [data]);
@@ -81,36 +85,40 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
   }, [data]);
 
   const scenarioData = useMemo(() => {
-    const scenCounts: Record<string, {success: number, error: number, total: number}> = {};
+    const scenCounts: Record<string, {success: number, error: number, other: number, total: number}> = {};
     data.forEach(d => {
-      if (!scenCounts[d.scenario]) scenCounts[d.scenario] = { success: 0, error: 0, total: 0 };
+      if (!scenCounts[d.scenario]) scenCounts[d.scenario] = { success: 0, error: 0, other: 0, total: 0 };
       scenCounts[d.scenario].total += 1;
       if (d.status === 'Thành công') scenCounts[d.scenario].success += 1;
-      if (d.status === 'Lỗi') scenCounts[d.scenario].error += 1;
+      else if (d.status === 'Lỗi') scenCounts[d.scenario].error += 1;
+      else scenCounts[d.scenario].other += 1;
     });
 
     const sortedScens = Object.keys(scenCounts).map(k => ({
       name: k.length > 15 ? k.substring(0,12) + '...' : k,
       'Thành công': scenCounts[k].success,
       'Lỗi': scenCounts[k].error,
+      'Chưa hoàn thành': scenCounts[k].other,
       total: scenCounts[k].total
     })).sort((a, b) => b.total - a.total).slice(0, 12);
     return sortedScens;
   }, [data]);
 
   const techErrorData = useMemo(() => {
-    const techMap: Record<string, {success: number, error: number, total: number}> = {};
+    const techMap: Record<string, {success: number, error: number, other: number, total: number}> = {};
     data.forEach(d => {
       const techName = d.technician.split('@')[0];
-      if (!techMap[techName]) techMap[techName] = { success: 0, error: 0, total: 0 };
+      if (!techMap[techName]) techMap[techName] = { success: 0, error: 0, other: 0, total: 0 };
       techMap[techName].total += 1;
       if (d.status === 'Thành công') techMap[techName].success += 1;
-      if (d.status === 'Lỗi') techMap[techName].error += 1;
+      else if (d.status === 'Lỗi') techMap[techName].error += 1;
+      else techMap[techName].other += 1;
     });
     return Object.keys(techMap).map(k => ({
       name: k,
       'Thành công': techMap[k].success,
-      'Lỗi': techMap[k].error
+      'Lỗi': techMap[k].error,
+      'Chưa hoàn thành': techMap[k].other
     })).sort((a, b) => b['Lỗi'] - a['Lỗi']).slice(0, 15);
   }, [data]);
 
@@ -165,17 +173,20 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
         <div className="w-full h-[300px] relative">
           {regionData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={regionData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} barSize={32}>
+              <BarChart data={regionData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} maxBarSize={40}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dy={5} />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dy={5} type="category" />
                 <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} dx={-5} />
                 <RechartsTooltip contentStyle={customTooltip} cursor={{ fill: '#f1f5f9' }} />
                 <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: '#64748b', paddingTop: '5px' }} iconType="circle" />
                 <Bar dataKey="Thành công" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]}>
                   <LabelList dataKey="Thành công" position="center" fill="#fff" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
                 </Bar>
-                <Bar dataKey="Lỗi" stackId="a" fill="#f43f5e" radius={[4, 4, 0, 0]}>
-                  <LabelList dataKey="Lỗi" position="top" fill="#f43f5e" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                <Bar dataKey="Lỗi" stackId="a" fill="#f43f5e" radius={[0, 0, 0, 0]}>
+                  <LabelList dataKey="Lỗi" position="center" fill="#fff" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                </Bar>
+                <Bar dataKey="Chưa hoàn thành" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]}>
+                  <LabelList dataKey="Chưa hoàn thành" position="top" fill="#f59e0b" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -190,17 +201,20 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
           <div className="w-full h-[300px] relative">
             {provinceData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={provinceData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} barSize={16}>
+                <BarChart data={provinceData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} maxBarSize={30}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dy={5} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dy={5} type="category" />
                   <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} dx={-5} />
                   <RechartsTooltip contentStyle={customTooltip} cursor={{ fill: '#f1f5f9' }} />
                   <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: '#64748b', paddingTop: '5px' }} iconType="circle" />
                   <Bar dataKey="Thành công" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]}>
                     <LabelList dataKey="Thành công" position="center" fill="#fff" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
                   </Bar>
-                  <Bar dataKey="Lỗi" stackId="a" fill="#f43f5e" radius={[4, 4, 0, 0]}>
-                    <LabelList dataKey="Lỗi" position="top" fill="#f43f5e" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                  <Bar dataKey="Lỗi" stackId="a" fill="#f43f5e" radius={[0, 0, 0, 0]}>
+                    <LabelList dataKey="Lỗi" position="center" fill="#fff" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                  </Bar>
+                  <Bar dataKey="Chưa hoàn thành" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="Chưa hoàn thành" position="top" fill="#f59e0b" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -213,9 +227,9 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
           <div className="w-full h-[300px] relative">
             {ktvCountData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ktvCountData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} barSize={20}>
+                <BarChart data={ktvCountData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} maxBarSize={30}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dy={5} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dy={5} type="category" />
                   <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} dx={-5} />
                   <RechartsTooltip contentStyle={customTooltip} cursor={{ fill: '#f1f5f9' }} />
                   <Bar dataKey="Số KTV" fill="#8b5cf6" radius={[4, 4, 0, 0]}>
@@ -235,17 +249,20 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
           <div className="w-full h-[450px] relative">
             {scenarioData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={scenarioData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} barSize={16}>
+                <BarChart data={scenarioData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }} maxBarSize={30}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dy={5} />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dy={5} type="category" />
                   <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} dx={-5} />
                   <RechartsTooltip contentStyle={customTooltip} cursor={{ fill: '#f1f5f9' }} />
                   <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: '#64748b', paddingTop: '10px' }} iconType="circle" />
-                  <Bar dataKey="Thành công" fill="#34d399" radius={[4, 4, 0, 0]}>
-                    <LabelList dataKey="Thành công" position="top" fill="#34d399" fontSize={9} formatter={(v: number) => v > 0 ? v : ''} />
+                  <Bar dataKey="Thành công" stackId="b" fill="#34d399" radius={[0, 0, 0, 0]}>
+                    <LabelList dataKey="Thành công" position="center" fill="#fff" fontSize={9} formatter={(v: number) => v > 0 ? v : ''} />
                   </Bar>
-                  <Bar dataKey="Lỗi" fill="#fb7185" radius={[4, 4, 0, 0]}>
-                    <LabelList dataKey="Lỗi" position="top" fill="#fb7185" fontSize={9} formatter={(v: number) => v > 0 ? v : ''} />
+                  <Bar dataKey="Lỗi" stackId="b" fill="#fb7185" radius={[0, 0, 0, 0]}>
+                    <LabelList dataKey="Lỗi" position="center" fill="#fff" fontSize={9} formatter={(v: number) => v > 0 ? v : ''} />
+                  </Bar>
+                  <Bar dataKey="Chưa hoàn thành" stackId="b" fill="#fcd34d" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="Chưa hoàn thành" position="top" fill="#fcd34d" fontSize={9} formatter={(v: number) => v > 0 ? v : ''} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -258,16 +275,19 @@ export const ChartArea: React.FC<ChartAreaProps> = ({ data }) => {
           <div className="w-full h-[450px] relative">
             {techErrorData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={techErrorData} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 0 }} barSize={10}>
+                <BarChart data={techErrorData} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 0 }} maxBarSize={20}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                   <XAxis type="number" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} dy={5} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} axisLine={false} tickLine={false} dx={-5} width={80} />
                   <RechartsTooltip contentStyle={customTooltip} cursor={{ fill: '#f1f5f9' }} />
                   <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: '#64748b', paddingTop: '10px' }} iconType="circle" />
-                  <Bar dataKey="Lỗi" fill="#f43f5e" radius={[0, 4, 4, 0]}>
-                    <LabelList dataKey="Lỗi" position="right" fill="#f43f5e" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                  <Bar dataKey="Lỗi" stackId="c" fill="#f43f5e" radius={[0, 0, 0, 0]}>
+                    <LabelList dataKey="Lỗi" position="center" fill="#fff" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
                   </Bar>
-                  <Bar dataKey="Thành công" fill="#e2e8f0" radius={[0, 4, 4, 0]}>
+                  <Bar dataKey="Chưa hoàn thành" stackId="c" fill="#f59e0b" radius={[0, 0, 0, 0]}>
+                    <LabelList dataKey="Chưa hoàn thành" position="center" fill="#fff" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
+                  </Bar>
+                  <Bar dataKey="Thành công" stackId="c" fill="#e2e8f0" radius={[0, 4, 4, 0]}>
                     <LabelList dataKey="Thành công" position="right" fill="#94a3b8" fontSize={10} formatter={(v: number) => v > 0 ? v : ''} />
                   </Bar>
                 </BarChart>

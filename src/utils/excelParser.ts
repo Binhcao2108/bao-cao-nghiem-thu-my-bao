@@ -95,10 +95,15 @@ export const parseExcelFile = async (file: File): Promise<ReportData[]> => {
           const duration = getCleanValue(item, ["thờigian", "thoigianthuchien", "duration"], "00:00:00");
           const dateCreated = getCleanValue(item, ["ngàytạo", "ngaytao", "date", "createdat"], "");
 
-          let status = "Đang trong ca";
+          let status = "Chưa hoàn thành";
           const lowerStatus = origStatus.toLowerCase();
-          if (lowerStatus.includes("thành công") || lowerStatus.includes("success") || lowerStatus.includes("ok")) status = "Thành công";
-          else if (lowerStatus.includes("lỗi") || lowerStatus.includes("thất bại") || lowerStatus.includes("fail") || lowerStatus.includes("error")) status = "Lỗi";
+          if (lowerStatus.includes("không đạt") || lowerStatus.includes("lỗi") || lowerStatus.includes("thất bại") || lowerStatus.includes("fail") || lowerStatus.includes("error") || lowerStatus.includes("không phạt")) {
+            status = "Lỗi";
+          } else if (lowerStatus.includes("thành công") || lowerStatus.includes("success") || lowerStatus.includes("ok") || lowerStatus.includes("đạt") || lowerStatus === "dat") {
+            status = "Thành công";
+          } else if (lowerStatus.includes("đang trong ca")) {
+            status = "Chưa hoàn thành";
+          }
 
           let band = "Khác";
           const lowerScen = scenario.toLowerCase();
